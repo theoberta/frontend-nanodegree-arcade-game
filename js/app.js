@@ -2,7 +2,6 @@
 var initialPlayerPosX = 202;
 var initialPlayerPosY = 404;
 var numPoints = 0;
-var gemCollected = false;
 var timeCount = 0;
 var numEnemies = 5;
 
@@ -59,9 +58,9 @@ Enemy.prototype.update = function(dt) {
     }
 
     // check for collision of player and enemy
-    if (((this.x + 75) > player.x && this.x < player.x && this.y === player.y) || ((this.x + 75) > (player.x + 75) && this.x < (player.x + 75) && (this.y === player.y)))  {
-        posX = 202;
-        posY = 404;
+    if (((this.x + 75) > player.x && this.x < player.x && this.y === player.y) ||
+    	((this.x + 75) > (player.x + 75) && this.x < (player.x + 75) && (this.y === player.y)))  {
+        player.resetPlayer();
     }
 
 };
@@ -73,9 +72,13 @@ Enemy.prototype.render = function() {
 
 // player pseudoclass
 var Player = function() {
-    this.x = initialPlayerPosX;
-    this.y = initialPlayerPosY;
+    this.resetPlayer();
     this.sprite = 'images/char-boy.png';
+};
+
+Player.prototype.resetPlayer = function() {
+	this.x = initialPlayerPosX;
+    this.y = initialPlayerPosY;
 };
 
 // draw the player on the screen
@@ -85,13 +88,10 @@ Player.prototype.render = function() {
 
 // update player's position
 Player.prototype.update = function() {
-    this.x = this.x;
-    this.y = this.y;
 
 	// reset to initial position when player reaches water and increment point number
     if (this.y <= 0) {
-        this.x = initialPlayerPosX;
-        this.y = initialPlayerPosY;
+        this.resetPlayer();
         numPoints = numPoints + 1;
     }
 };
