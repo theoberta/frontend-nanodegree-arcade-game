@@ -1,11 +1,12 @@
-// Enemies our player must avoid
-var posX = 202;
-var posY = 404;
+// some global variables
+var initialPlayerPosX = 202;
+var initialPlayerPosY = 404;
 var numPoints = 0;
-var col = false;
-var visible = false;
+var gemCollected = false;
+var timeCount = 0;
 var numEnemies = 5;
 
+// 2 global functions choosing random position from array
 var randomPosY = function() {
 	var enemyPosY = [72,155,238];
     // from: https://gist.github.com/kerimdzhanov/7529623
@@ -20,19 +21,17 @@ var randomPosX = function() {
     		return gemPosX[i];
     	};
 
-
+// Enemies pseudoclass
 var Enemy = function() {
     this.x = -101;
     this.y = randomPosY();
     this.speed = Enemy.randomSpeed();
-    // Variables applied to each of our instances go here,
-    // we've provided one for you to get started
-
     // The image/sprite for our enemies, this uses
     // a helper we've provided to easily load images
     this.sprite = 'images/enemy-bug.png';
 };
 
+// function returns random speed or minimum speed
 Enemy.randomSpeed = function() {
 	var rSpeed = Math.random() * 130;
 	if (rSpeed < 40) {
@@ -43,23 +42,23 @@ Enemy.randomSpeed = function() {
 	}
 }
 
-// Update the enemy's position, required method for game
-// Parameter: dt, a time delta between ticks
+// Update the enemy's position and check for collision
 Enemy.prototype.update = function(dt) {
 
-    // You should multiply any movement by the dt parameter
-    // which will ensure the game runs at the same speed for
-    // all computers.
+	// if enemy moves off screen x position is reset to beginning
+	// y position and speed are randomly changed
     if (this.x > 505) {
         this.x = -101;
         this.y = randomPosY();
         this.speed = Enemy.randomSpeed();
     }
+    // update the enemy's position
+    // dt parameter ensure the game runs at the same speed for all computers
     else {
     this.x = this.x + (this.speed * dt);
     }
 
-    // collision with enemy
+    // check for collision of player and enemy
     if (((this.x + 75) > player.x && this.x < player.x && this.y === player.y) || ((this.x + 75) > (player.x + 75) && this.x < (player.x + 75) && (this.y === player.y)))  {
         posX = 202;
         posY = 404;
@@ -67,56 +66,54 @@ Enemy.prototype.update = function(dt) {
 
 };
 
-// Draw the enemy on the screen, required method for game
+// Draw the enemy on the screen
 Enemy.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
-// Now write your own player class
-
-
-
+// player pseudoclass
 var Player = function() {
-    x = posX;
-    y = posY;
+    this.x = initialPlayerPosX;
+    this.y = initialPlayerPosY;
     this.sprite = 'images/char-boy.png';
 };
-// This class requires an update(), render() and
-// a handleInput() method.
 
+// draw the player on the screen
 Player.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
+// update player's position
 Player.prototype.update = function() {
-    this.x = posX;
-    this.y = posY;
+    this.x = this.x;
+    this.y = this.y;
 
-// reset to initial position when reaching water
+	// reset to initial position when player reaches water and increment point number
     if (this.y <= 0) {
-        posX = 202;
-        posY = 404;
+        this.x = initialPlayerPosX;
+        this.y = initialPlayerPosY;
         numPoints = numPoints + 1;
     }
 };
 
+// moves player acording to pressed key
+// prevents player from moving off screen
 Player.prototype.handleInput = function(key) {
-    if (key === "left" && posX >= 101) {
-        posX = posX - 101;
+    if (key === "left" && this.x >= 101) {
+        this.x = this.x - 101;
     }
-    else if (key === "right" && posX < 404) {
-        posX = posX + 101;
+    else if (key === "right" && this.x < 404) {
+        this.x = this.x + 101;
     }
-    else if (key === "up" && posY >= 0) {
-        posY = posY - 83;
+    else if (key === "up" && this.y >= 0) {
+        this.y = this.y - 83;
     }
-    else if (key === "down" && posY < 404) {
-        posY = posY + 83;
+    else if (key === "down" && this.y < 404) {
+        this.y = this.y + 83;
     }
 };
 
-// This listens for key presses and sends the keys to your
-// Player.handleInput() method. You don't need to modify this.
+// listen for key presses and send keys to Player.handleInput() method
 document.addEventListener('keyup', function(e) {
     var allowedKeys = {
         37: 'left',
@@ -128,61 +125,65 @@ document.addEventListener('keyup', function(e) {
     player.handleInput(allowedKeys[e.keyCode]);
 });
 
-// Points class
+// Points pseudoclass
 var Points = function() {
     };
 
+// draw points on the screen
+// define text style
 Points.prototype.render = function() {
     ctx.font = "24px sans-serif";
     ctx.textBaseline = "hanging";
     ctx.fillText("Points:", 10, 10);
-    ctx.fillText(this.value, 90, 10);
+    ctx.fillText(this.value, 100, 10);
    };
 
+// update points
 Points.prototype.update = function() {
     this.value = numPoints;
     };
 
-// Gem class
+// Gem pseudoclass
 var Gem = function() {
 	this.x = randomPosX();
 	this.y = randomPosY();
     this.sprite = 'images/Gem Orange.png';
+    this.visible = false;
+    this.collected = false;
 };
 
+// draw gem on the screen if at least 2 points and this.collected is false
 Gem.prototype.render = function() {
-    if (numPoints > 1 && col === false) {
+    if (numPoints > 1 && this.collected === false) {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
-    visible = true;
-}
+    this.visible = true;
+    }
 };
 
-var z = 0;
-
+// check collision of player and gem
+// after interval causes gem to render again at other position
 Gem.prototype.update = function() {
-
-    // collision with gem
-    if (this.x === player.x && this.y === player.y && visible === true) {
+    // collision with gem, updates points, sets this.collected to true so gem is not rendered
+    if (this.x === player.x && this.y === player.y && this.visible === true) {
     	numPoints = numPoints + 2;
-    	// make gem disappear
-    	col = true;
-    	visible = false;
-    }
+    	this.collected = true;
+    	this.visible = false;
+    	}
 
-    if (col === true) {
-    	z = z + 1;
-    	if (z === 500) {
-    		col = false;
-    		z = 0;
+    // after interval gem renders again at another random position
+    if (this.collected === true) {
+    	timeCount = timeCount + 1;
+    	if (timeCount === 500) {
+    		this.collected = false;
+    		timeCount = 0;
     		this.y = randomPosY();
     		this.x = randomPosX();
     	}
 	}
-
 };
 
-// Now instantiate your objects.
-// Place all enemy objects in an array called allEnemies
+// instantiate objects
+// Place all enemy objects in array allEnemies
 var allEnemies = [];
 for (var i = 0; i < numEnemies; i++) {
     var enemy = new Enemy();
@@ -200,7 +201,7 @@ var gem = new Gem();
 
 
 // var newGem = function() {
-// 	col = false;
+// 	gemCollected = false;
 // };
 
 // setTimeout(newGem, 3000);
