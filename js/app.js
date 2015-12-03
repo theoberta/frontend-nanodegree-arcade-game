@@ -1,39 +1,56 @@
 'use strict';
 
+// define constants
+var HORIZONTAL_BASE_UNIT = 101;
+var VERTICAL_BASE_UNIT = 83;
+
 // define global variables
-var baseUnit = 101;
-var initialPlayerPosX = 2 * baseUnit;
-var initialPlayerPosY = 4 * baseUnit;
+var initialPlayerPosX = 2 * HORIZONTAL_BASE_UNIT;
+var initialPlayerPosY = 4 * HORIZONTAL_BASE_UNIT;
 var timeCount = 0;
 
-// 2 global functions choose random position from array
+/**
+* @description Chooses random y position from array
+* @returns {number} random y position
+*/
 var randomPosY = function() {
     var arrayPosY = [72, 155, 238];
     // from: https://gist.github.com/kerimdzhanov/7529623
-    // calculate random number within range
+    // calculates random number within range of array index
     var i = Math.floor(Math.random() * (2 + 1));
     return arrayPosY[i];
 };
 
+/**
+* @description Chooses random x position from array
+* @returns {number} random x position
+*/
 var randomPosX = function() {
-    var arrayPosX = [0, 1 * baseUnit, 2 * baseUnit, 3 * baseUnit, 4 * baseUnit];
+    var arrayPosX = [0, 1 * HORIZONTAL_BASE_UNIT, 2 * HORIZONTAL_BASE_UNIT, 3 * HORIZONTAL_BASE_UNIT, 4 * HORIZONTAL_BASE_UNIT];
     // from: https://gist.github.com/kerimdzhanov/7529623
+    // calculates random number within range of array index
     var i = Math.floor(Math.random() * (4 + 1));
     return arrayPosX[i];
 };
 
-// Enemies pseudoclass
+/**
+* @description Represents an enemy
+* @constructor
+*/
 var Enemy = function() {
-    this.x = -baseUnit;
+    this.x = -HORIZONTAL_BASE_UNIT;
     this.y = randomPosY();
-    this.speed = Enemy.randomSpeed();
+    this.speed = this.randomSpeed();
     // The image/sprite for our enemies, this uses
     // a helper we've provided to easily load images
     this.sprite = 'images/enemy-bug.png';
 };
 
-// function returns random speed or minimum speed
-Enemy.randomSpeed = function() {
+/**
+* @description generates random speed, or minimum speed if speed < 50
+* @returns {number} random speed or minimum speed
+*/
+Enemy.prototype.randomSpeed = function() {
     var rSpeed = Math.random() * 300;
     if (rSpeed < 50) {
         return 50;
@@ -42,18 +59,20 @@ Enemy.randomSpeed = function() {
     }
 };
 
-// Update the enemy's position and check for collision
+/**
+* @description Updates the enemy's position and checks for collision
+* @param {number} dt - ensures the game runs at the same speed for all computers
+*/
 Enemy.prototype.update = function(dt) {
 
     // if enemy moves off screen x position is reset to beginning
     // y position and speed are randomly changed
-    if (this.x > 505) {
-        this.x = -baseUnit;
+    if (this.x > 5 * HORIZONTAL_BASE_UNIT) {
+        this.x = -HORIZONTAL_BASE_UNIT;
         this.y = randomPosY();
-        this.speed = Enemy.randomSpeed();
+        this.speed = this.randomSpeed();
     }
     // update the enemy's position
-    // dt parameter ensure the game runs at the same speed for all computers
     else {
         this.x = this.x + (this.speed * dt);
     }
@@ -67,50 +86,64 @@ Enemy.prototype.update = function(dt) {
 
 };
 
-// Draw the enemy on the screen
+/**
+* @description Draws the enemy on the screen
+*/
 Enemy.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
-// player pseudoclass
+/**
+* @description Represents player
+* @constructor
+*/
 var Player = function() {
     this.resetPlayer();
     this.sprite = 'images/char-boy.png';
 };
 
+/**
+* @description Resets player
+*/
 Player.prototype.resetPlayer = function() {
     this.x = initialPlayerPosX;
     this.y = initialPlayerPosY;
 };
 
-// draw the player on the screen
+/**
+* @description Draws the player on the screen
+*/
 Player.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
-// update player's position
+/**
+* @description Resets player to initial position when player reaches water and increment point by 1
+*/
 Player.prototype.update = function() {
 
-    // reset to initial position when player reaches water and increment point number
     if (this.y <= 0) {
         this.resetPlayer();
         points.value = points.value + 1;
     }
 };
 
-// moves player acording to pressed key
-// prevents player from moving off screen
+/**
+* @description Moves player acording to pressed key, prevents player from moving off screen
+* @param {string} key - pressed key code
+*/
 Player.prototype.handleInput = function(key) {
-    if (key === "left" && this.x >= baseUnit) {
-        this.x = this.x - baseUnit;
-    } else if (key === "right" && this.x < 404) {
-        this.x = this.x + baseUnit;
+    if (key === "left" && this.x >= HORIZONTAL_BASE_UNIT) {
+        this.x = this.x - HORIZONTAL_BASE_UNIT;
+    } else if (key === "right" && this.x < 4 * HORIZONTAL_BASE_UNIT) {
+        this.x = this.x + HORIZONTAL_BASE_UNIT;
     } else if (key === "up" && this.y >= 0) {
-        this.y = this.y - 83;
-    } else if (key === "down" && this.y < 404) {
-        this.y = this.y + 83;
+        this.y = this.y - VERTICAL_BASE_UNIT;
+    } else if (key === "down" && this.y < 4 * HORIZONTAL_BASE_UNIT) {
+        this.y = this.y + VERTICAL_BASE_UNIT;
     }
 };
+
 
 // listen for key presses and send keys to Player.handleInput() method
 document.addEventListener('keyup', function(e) {
@@ -124,13 +157,17 @@ document.addEventListener('keyup', function(e) {
     player.handleInput(allowedKeys[e.keyCode]);
 });
 
-// Points pseudoclass
+/**
+* @description Represents points
+* @constructor
+*/
 var Points = function() {
     this.value = 0;
 };
 
-// draw points on the screen
-// define text style
+/**
+* @description Draws points on the screen, defines text style
+*/
 Points.prototype.render = function() {
     ctx.font = "24px sans-serif";
     ctx.textBaseline = "hanging";
@@ -138,7 +175,10 @@ Points.prototype.render = function() {
     ctx.fillText(this.value, 100, 10);
 };
 
-// Gem pseudoclass
+/**
+* @description Represents gem
+* @constructor
+*/
 var Gem = function() {
     this.x = randomPosX();
     this.y = randomPosY();
@@ -147,7 +187,9 @@ var Gem = function() {
     this.collected = false;
 };
 
-// draw gem on the screen if at least 2 points and this.collected is false
+/**
+* @description Draws gem on the screen if at least 2 points and this.collected is false
+*/
 Gem.prototype.render = function() {
     if (points.value > 1 && this.collected === false) {
         ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
@@ -155,8 +197,9 @@ Gem.prototype.render = function() {
     }
 };
 
-// check collision of player and gem
-// after interval causes gem to render again at other position
+/**
+* @description Checks collision of player and gem, after interval causes gem to render again at other position
+*/
 Gem.prototype.update = function() {
     // collision with gem, updates points, sets this.collected to true so gem is not rendered
     if (this.x === player.x && this.y === player.y && this.visible === true) {
